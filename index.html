@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UPC-A Barcode Generator - Free JavaScript Library Demo</title>
+    <meta name="description" content="Free UPC-A barcode generator JavaScript library. Generate professional GS1-compliant US retail barcodes. Try the full-featured bulk generator at bulkbarcodesgenerator.com">
+    <meta name="keywords" content="UPC-A, barcode generator, JavaScript barcode, GS1 barcode, bulk barcode generator, free barcode generator, US retail barcode">
+    <meta name="author" content="sbiak">
+    <link rel="canonical" href="https://github.com/sqbiak/upc-a-renderer">
+
+    <!-- Open Graph / Social -->
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="UPC-A Barcode Generator - Free JavaScript Library">
+    <meta property="og:description" content="Generate professional UPC-A barcodes with this free JavaScript library. For bulk generation, visit bulkbarcodesgenerator.com">
+    <meta property="og:url" content="https://github.com/sqbiak/upc-a-renderer">
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:title" content="UPC-A Barcode Generator Library">
+    <meta name="twitter:description" content="Free JavaScript UPC-A barcode generator. For bulk barcodes, visit bulkbarcodesgenerator.com">
+
+    <script src="upc-a-renderer.js"></script>
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        h1 { color: #333; }
+        .demo-box {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        canvas { display: block; margin: 20px auto; border: 1px solid #eee; }
+        input, button, select {
+            padding: 10px 15px;
+            font-size: 16px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        button {
+            background: #3498db;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        button:hover { background: #2980b9; }
+        pre {
+            background: #2d2d2d;
+            color: #f8f8f2;
+            padding: 15px;
+            border-radius: 4px;
+            overflow-x: auto;
+        }
+        code { font-family: 'Fira Code', monospace; }
+        .options { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; margin: 15px 0; padding: 15px; background: #f8f9fa; border-radius: 6px; }
+        .options label { display: flex; flex-direction: column; font-size: 13px; color: #555; }
+        .options input, .options select { margin-top: 5px; padding: 6px; border: 1px solid #ddd; border-radius: 4px; }
+        .options input[type="color"] { height: 32px; padding: 2px; }
+        button { margin-right: 5px; }
+        button:last-child { background: #95a5a6; }
+        button:last-child:hover { background: #7f8c8d; }
+        .style-toggle { display: flex; gap: 10px; align-items: center; margin: 15px 0; }
+        .style-toggle label { display: flex; align-items: center; gap: 5px; cursor: pointer; padding: 8px 16px; border: 2px solid #ddd; border-radius: 6px; font-weight: 500; }
+        .style-toggle input[type="radio"] { display: none; }
+        .style-toggle input[type="radio"]:checked + span { color: #3498db; }
+        .style-toggle label:has(input:checked) { border-color: #3498db; background: #ebf5ff; }
+        .info-badge { display: inline-block; background: #e7f3ff; color: #1a73e8; padding: 4px 8px; border-radius: 4px; font-size: 12px; margin-left: 8px; }
+    </style>
+</head>
+<body>
+    <h1>UPC-A Renderer</h1>
+    <p>Lightweight, professional-quality UPC-A barcode generator for US/Canada retail <span class="info-badge">12 digits</span></p>
+    <p style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 15px 20px; border-radius: 8px; text-align: center; margin-bottom: 20px;">
+        <strong>Need to generate barcodes in bulk?</strong> Try <a href="https://bulkbarcodesgenerator.com/upc-a" style="color: #fff; text-decoration: underline; font-weight: bold;">Bulk UPC-A Generator</a> - powered by this library!
+    </p>
+
+    <div class="demo-box">
+        <h3>Live Demo</h3>
+        <div style="display: flex; gap: 10px; flex-wrap: wrap; align-items: center;">
+            <input type="text" id="code-input" value="012345678905" placeholder="Enter 11 or 12 digits" style="flex: 1; min-width: 200px;">
+            <button onclick="generateBarcode()">Generate</button>
+        </div>
+
+        <div class="style-toggle">
+            <strong>Style:</strong>
+            <label>
+                <input type="radio" name="style" value="notched" checked onchange="generateBarcode()">
+                <span>Notched (Retail)</span>
+            </label>
+            <label>
+                <input type="radio" name="style" value="flat" onchange="generateBarcode()">
+                <span>Flat</span>
+            </label>
+        </div>
+
+        <div class="options">
+            <label>Module Width: <input type="number" id="opt-width" value="2" min="1" max="5" step="0.5"></label>
+            <label>Height: <input type="number" id="opt-height" value="70" min="20" max="200"></label>
+            <label>Guard Extend: <input type="number" id="opt-guard" value="10" min="0" max="50"></label>
+            <label>Font Size: <input type="number" id="opt-font" value="14" min="0" max="32"></label>
+            <label>Small Digit Size: <input type="number" id="opt-smallfont" value="10" min="0" max="24"></label>
+            <label>Text Margin: <input type="number" id="opt-textmargin" value="2" min="0" max="20"></label>
+            <label>Quiet Zone: <input type="number" id="opt-quietzone" value="9" min="0" max="50"></label>
+            <label>Outer Digit Gap: <input type="number" id="opt-outergap" value="2" min="0" max="20"></label>
+            <label>Background: <input type="color" id="opt-bg" value="#FFFFFF"></label>
+            <label>Foreground: <input type="color" id="opt-fg" value="#000000"></label>
+            <label>Checksum Mode:
+                <select id="opt-checksum">
+                    <option value="auto">Auto (recommended)</option>
+                    <option value="validate">Validate only</option>
+                    <option value="recalculate">Always recalculate</option>
+                </select>
+            </label>
+            <label>Font:
+                <select id="opt-fontfamily">
+                    <option value='"OCR-B", "Courier New", monospace'>OCR-B / Courier</option>
+                    <option value='"Arial", sans-serif'>Arial</option>
+                    <option value='"Helvetica", sans-serif'>Helvetica</option>
+                    <option value='"monospace"'>Monospace</option>
+                    <option value='"Georgia", serif'>Georgia</option>
+                </select>
+            </label>
+        </div>
+
+        <canvas id="barcode"></canvas>
+
+        <div style="margin: 15px 0; display: flex; gap: 10px; flex-wrap: wrap;">
+            <button onclick="downloadBarcode()">Download PNG</button>
+            <button onclick="downloadSVG()">Download SVG</button>
+            <button onclick="resetDefaults()">Reset Defaults</button>
+        </div>
+
+        <h4>Generated Code:</h4>
+        <pre id="code-output" style="font-size: 12px; max-height: 200px; overflow: auto;"></pre>
+    </div>
+
+    <div class="demo-box">
+        <h3>UPC-A Validator</h3>
+        <p>Check if your UPC-A barcode is valid and see the correct check digit.</p>
+
+        <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+            <input type="text" id="validate-input" value="012345678905" placeholder="Enter UPC-A code" style="flex: 1; min-width: 200px;">
+            <button onclick="validateCode()" style="background: #27ae60;">Validate</button>
+        </div>
+
+        <div id="validate-result" style="margin-top: 15px; padding: 15px; border-radius: 6px; font-size: 14px;"></div>
+    </div>
+
+    <div class="demo-box">
+        <h3>UPC-A vs EAN-13</h3>
+        <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
+            <tr style="background: #f8f9fa;">
+                <th style="padding: 10px; text-align: left; border-bottom: 2px solid #ddd;">Feature</th>
+                <th style="padding: 10px; text-align: left; border-bottom: 2px solid #ddd;">UPC-A</th>
+                <th style="padding: 10px; text-align: left; border-bottom: 2px solid #ddd;">EAN-13</th>
+            </tr>
+            <tr>
+                <td style="padding: 10px; border-bottom: 1px solid #eee;">Total Digits</td>
+                <td style="padding: 10px; border-bottom: 1px solid #eee;"><strong>12</strong></td>
+                <td style="padding: 10px; border-bottom: 1px solid #eee;">13</td>
+            </tr>
+            <tr>
+                <td style="padding: 10px; border-bottom: 1px solid #eee;">Region</td>
+                <td style="padding: 10px; border-bottom: 1px solid #eee;"><strong>US & Canada</strong></td>
+                <td style="padding: 10px; border-bottom: 1px solid #eee;">International</td>
+            </tr>
+            <tr>
+                <td style="padding: 10px; border-bottom: 1px solid #eee;">First/Last Digit</td>
+                <td style="padding: 10px; border-bottom: 1px solid #eee;"><strong>Small, outside bars</strong></td>
+                <td style="padding: 10px; border-bottom: 1px solid #eee;">First small outside, last under bars</td>
+            </tr>
+            <tr>
+                <td style="padding: 10px;">Middle Digits</td>
+                <td style="padding: 10px;"><strong>5 + 5</strong></td>
+                <td style="padding: 10px;">6 + 6</td>
+            </tr>
+        </table>
+    </div>
+
+    <div class="demo-box">
+        <h3>License</h3>
+        <p><strong>Proprietary License</strong> - Copyright (c) 2024 ZenBlock</p>
+        <p>Free for personal and educational use. For commercial licensing, contact: sebastian.qbiak+license@gmail.com</p>
+    </div>
+
+    <div class="demo-box" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+        <h3 style="color: white;">Generate Barcodes in Bulk</h3>
+        <p>This library powers <a href="https://bulkbarcodesgenerator.com/upc-a" style="color: #fff; font-weight: bold;">Bulk Barcodes Generator</a> - a free online tool for generating multiple barcodes at once.</p>
+        <p>Features include: UPC-A, EAN-13, Code 128, QR Code, and more. Export to PNG, SVG, or PDF.</p>
+        <a href="https://bulkbarcodesgenerator.com/upc-a" style="display: inline-block; background: white; color: #667eea; padding: 12px 24px; border-radius: 6px; text-decoration: none; font-weight: bold; margin-top: 10px;">Try Bulk UPC-A Generator</a>
+    </div>
+
+    <h2 style="margin-top: 40px; color: #333; border-bottom: 2px solid #ddd; padding-bottom: 10px;">Developer Documentation</h2>
+
+    <div class="demo-box">
+        <h3>Installation</h3>
+        <pre><code>&lt;!-- CDN (jsDelivr) --&gt;
+&lt;script src="https://cdn.jsdelivr.net/gh/sqbiak/upc-a-renderer@v1.0.0/upc-a-renderer.min.js"&gt;&lt;/script&gt;
+
+&lt;!-- Or download and include locally --&gt;
+&lt;script src="upc-a-renderer.min.js"&gt;&lt;/script&gt;</code></pre>
+    </div>
+
+    <div class="demo-box">
+        <h3>Rendering API</h3>
+        <pre><code>// Render to canvas
+UPCARenderer.render('#my-canvas', '012345678905');
+
+// With options
+UPCARenderer.render(canvas, '012345678905', {
+    moduleWidth: 2,          // Bar width (px)
+    height: 70,              // Main bar height (px)
+    guardExtend: 10,         // Guard bar extension (px)
+    fontSize: 14,            // Middle digit font size (px)
+    smallDigitFontSize: 10,  // First/last digit font size (px)
+    textMargin: 2,           // Gap between bars and text
+    quietZone: 9,            // Quiet zone (in modules)
+    style: 'notched',        // 'notched' | 'flat'
+    checksum: 'auto',        // 'auto' | 'validate' | 'recalculate'
+    background: '#FFFFFF',
+    foreground: '#000000'
+});
+
+// Get as Data URL
+const dataUrl = UPCARenderer.toDataURL('012345678905');
+
+// Get as Blob (async)
+const blob = await UPCARenderer.toBlob('012345678905');
+
+// Get as SVG string
+const svgString = UPCARenderer.toSVG('012345678905');</code></pre>
+    </div>
+
+    <div class="demo-box">
+        <h3>Input Flexibility</h3>
+        <pre><code>// 11 digits - checksum auto-calculated
+UPCARenderer.render(canvas, '01234567890');  // → 012345678905
+
+// 12 digits - checksum validated/used
+UPCARenderer.render(canvas, '012345678905');
+
+// Shorter codes - padded with leading zeros
+UPCARenderer.render(canvas, '12345');  // → 000001234506
+
+// Checksum modes
+UPCARenderer.render(canvas, '012345678905', { checksum: 'auto' });
+// 'auto' - accept if valid, recalculate if invalid
+
+UPCARenderer.render(canvas, '012345678905', { checksum: 'validate' });
+// 'validate' - throw error if checksum is wrong
+
+UPCARenderer.render(canvas, '012345678900', { checksum: 'recalculate' });
+// 'recalculate' - always replace last digit with correct checksum</code></pre>
+    </div>
+
+    <div class="demo-box">
+        <h3>Validation API</h3>
+        <pre><code>// Validate a UPC-A code (checks checksum for 12-digit input)
+UPCARenderer.validate('012345678905');  // true
+UPCARenderer.validate('012345678900');  // false (wrong checksum)
+
+// Calculate the check digit for an 11-digit code
+UPCARenderer.calculateChecksum('01234567890');  // 5
+
+// Format UPC-A with hyphens
+UPCARenderer.formatUPC('012345678905');  // "0-12345-67890-5"
+
+// Get full encoding with auto-calculated checksum
+UPCARenderer.encode('01234567890');
+// { encoding: '10100...', fullCode: '012345678905' }</code></pre>
+    </div>
+
+    <script>
+        function getStyle() {
+            return document.querySelector('input[name="style"]:checked').value;
+        }
+
+        function getOptions() {
+            return {
+                moduleWidth: parseFloat(document.getElementById('opt-width').value),
+                height: parseInt(document.getElementById('opt-height').value),
+                guardExtend: parseInt(document.getElementById('opt-guard').value),
+                fontSize: parseInt(document.getElementById('opt-font').value),
+                smallDigitFontSize: parseInt(document.getElementById('opt-smallfont').value),
+                textMargin: parseInt(document.getElementById('opt-textmargin').value),
+                quietZone: parseInt(document.getElementById('opt-quietzone').value),
+                outerDigitGap: parseInt(document.getElementById('opt-outergap').value),
+                background: document.getElementById('opt-bg').value,
+                foreground: document.getElementById('opt-fg').value,
+                font: document.getElementById('opt-fontfamily').value,
+                style: getStyle(),
+                checksum: document.getElementById('opt-checksum').value
+            };
+        }
+
+        function generateBarcode() {
+            const code = document.getElementById('code-input').value;
+            try {
+                UPCARenderer.render('#barcode', code, getOptions());
+                updateCodeOutput();
+            } catch (e) {
+                alert('Error: ' + e.message);
+            }
+        }
+
+        function downloadBarcode() {
+            const code = document.getElementById('code-input').value;
+            try {
+                const { fullCode } = UPCARenderer.encode(code);
+                const dataUrl = UPCARenderer.toDataURL(code, getOptions());
+                const link = document.createElement('a');
+                link.download = `upc-a-${fullCode}.png`;
+                link.href = dataUrl;
+                link.click();
+            } catch (e) {
+                alert('Error: ' + e.message);
+            }
+        }
+
+        function downloadSVG() {
+            const code = document.getElementById('code-input').value;
+            try {
+                const { fullCode } = UPCARenderer.encode(code);
+                const svgString = UPCARenderer.toSVG(code, getOptions());
+                const blob = new Blob([svgString], { type: 'image/svg+xml' });
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.download = `upc-a-${fullCode}.svg`;
+                link.href = url;
+                link.click();
+                URL.revokeObjectURL(url);
+            } catch (e) {
+                alert('Error: ' + e.message);
+            }
+        }
+
+        function updateCodeOutput() {
+            const opts = getOptions();
+            const code = document.getElementById('code-input').value;
+            const codeStr = `UPCARenderer.render('#canvas', '${code}', ${JSON.stringify(opts, null, 2)});`;
+            document.getElementById('code-output').textContent = codeStr;
+        }
+
+        function resetDefaults() {
+            document.getElementById('opt-width').value = 2;
+            document.getElementById('opt-height').value = 70;
+            document.getElementById('opt-guard').value = 10;
+            document.getElementById('opt-font').value = 14;
+            document.getElementById('opt-smallfont').value = 10;
+            document.getElementById('opt-textmargin').value = 2;
+            document.getElementById('opt-quietzone').value = 9;
+            document.getElementById('opt-outergap').value = 2;
+            document.getElementById('opt-bg').value = '#FFFFFF';
+            document.getElementById('opt-fg').value = '#000000';
+            document.getElementById('opt-fontfamily').value = '"OCR-B", "Courier New", monospace';
+            document.getElementById('opt-checksum').value = 'auto';
+            document.querySelector('input[name="style"][value="notched"]').checked = true;
+            generateBarcode();
+        }
+
+        // Auto-regenerate on any change
+        document.querySelectorAll('.options input, .options select').forEach(el => {
+            el.addEventListener('change', generateBarcode);
+            el.addEventListener('input', generateBarcode);
+        });
+        document.getElementById('code-input').addEventListener('input', generateBarcode);
+
+        // Generate on load
+        generateBarcode();
+
+        // Validator
+        function validateCode() {
+            const input = document.getElementById('validate-input').value.trim();
+            const resultDiv = document.getElementById('validate-result');
+
+            if (!input) {
+                resultDiv.style.background = '#f8d7da';
+                resultDiv.style.color = '#721c24';
+                resultDiv.innerHTML = 'Please enter a code to validate.';
+                return;
+            }
+
+            if (!/^\d+$/.test(input)) {
+                resultDiv.style.background = '#f8d7da';
+                resultDiv.style.color = '#721c24';
+                resultDiv.innerHTML = '<strong>Invalid:</strong> Code must contain only digits.';
+                return;
+            }
+
+            if (input.length < 11 || input.length > 12) {
+                resultDiv.style.background = '#f8d7da';
+                resultDiv.style.color = '#721c24';
+                resultDiv.innerHTML = '<strong>Invalid:</strong> UPC-A requires 11 or 12 digits. You entered ' + input.length + '.';
+                return;
+            }
+
+            const isValid = UPCARenderer.validate(input);
+            const code11 = input.length === 12 ? input.substring(0, 11) : input.padStart(11, '0');
+            const checksum = UPCARenderer.calculateChecksum(code11);
+            const fullCode = code11 + checksum;
+            const formatted = UPCARenderer.formatUPC(fullCode);
+
+            if (isValid) {
+                resultDiv.style.background = '#d4edda';
+                resultDiv.style.color = '#155724';
+                resultDiv.innerHTML = '<strong>Valid UPC-A</strong><br>' +
+                    'Code: <code>' + fullCode + '</code><br>' +
+                    'Formatted: <code>' + formatted + '</code><br>' +
+                    'Check digit: <code>' + checksum + '</code>';
+            } else {
+                resultDiv.style.background = '#f8d7da';
+                resultDiv.style.color = '#721c24';
+                resultDiv.innerHTML = '<strong>Invalid checksum!</strong><br>' +
+                    'You entered: <code>' + input + '</code><br>' +
+                    'Correct code should be: <code>' + fullCode + '</code><br>' +
+                    'Expected check digit: <code>' + checksum + '</code>, got: <code>' + input[11] + '</code>';
+            }
+        }
+
+        // Validate on Enter key
+        document.getElementById('validate-input').addEventListener('keyup', function(e) {
+            if (e.key === 'Enter') validateCode();
+        });
+
+        // Initial validation
+        validateCode();
+    </script>
+</body>
+</html>
