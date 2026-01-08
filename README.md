@@ -175,9 +175,7 @@ UPCARenderer.encode('01234567890');
 
 ## License
 
-Proprietary License - Copyright (c) 2024 ZenBlock
-
-Free for personal and educational use. For commercial licensing, contact: sebastian.qbiak+license@gmail.com
+Distributed under the MIT License. See `LICENSE` for more information.
 
 ## Related
 
