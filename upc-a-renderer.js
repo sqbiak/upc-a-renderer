@@ -249,8 +249,8 @@
         // Quiet zone in pixels
         const quietZonePx = quietZone * moduleWidth;
 
-        // Space for outer digits (first and last)
-        const outerDigitWidth = smallDigitFontSize * 0.7;
+        // Space for outer digits (first and last) - use fontSize since all digits are same size
+        const outerDigitWidth = fontSize * 0.7;
         const leftOuterSpace = outerDigitWidth + outerDigitGap;
         const rightOuterSpace = outerDigitWidth + outerDigitGap;
 
@@ -291,18 +291,17 @@
         // Draw text
         const textY = offsetY + height + textMargin;
 
-        // First digit (small, left of start guard)
+        // All digits use the same fontSize (outer digits same size as middle)
         if (fontSize > 0) {
             ctx.fillStyle = foreground;
-            ctx.font = `${smallDigitFontSize}px ${font}`;
-            ctx.textAlign = 'right';
+            ctx.font = `${fontSize}px ${font}`;
             ctx.textBaseline = 'top';
-            // Align vertically with middle digits
-            const smallDigitY = textY + (fontSize - smallDigitFontSize) / 2;
-            ctx.fillText(fullCode[0], barcodeStartX - outerDigitGap, smallDigitY);
+
+            // First digit (left of start guard)
+            ctx.textAlign = 'right';
+            ctx.fillText(fullCode[0], barcodeStartX - outerDigitGap, textY);
 
             // Left group (5 digits: index 1-5)
-            ctx.font = `${fontSize}px ${font}`;
             ctx.textAlign = 'center';
             const leftStart = barcodeStartX + 3 * moduleWidth; // After start guard
             for (let i = 0; i < 5; i++) {
@@ -317,11 +316,10 @@
                 ctx.fillText(fullCode[i + 6], digitX, textY);
             }
 
-            // Last digit (checksum, small, right of end guard)
-            ctx.font = `${smallDigitFontSize}px ${font}`;
+            // Last digit (checksum, right of end guard)
             ctx.textAlign = 'left';
             const endGuardX = barcodeStartX + encoding.length * moduleWidth;
-            ctx.fillText(fullCode[11], endGuardX + outerDigitGap, smallDigitY);
+            ctx.fillText(fullCode[11], endGuardX + outerDigitGap, textY);
         }
 
         return canvas;
@@ -385,7 +383,7 @@
         const guardHeight = style === 'notched' ? height + guardExtend : height;
 
         const quietZonePx = quietZone * moduleWidth;
-        const outerDigitWidth = smallDigitFontSize * 0.7;
+        const outerDigitWidth = fontSize * 0.7;
         const leftOuterSpace = outerDigitWidth + outerDigitGap;
         const rightOuterSpace = outerDigitWidth + outerDigitGap;
 
@@ -428,18 +426,17 @@
             x += moduleWidth;
         }
 
-        // Text (only if fontSize > 0)
+        // Text (only if fontSize > 0) - all digits use same fontSize
         if (fontSize > 0) {
             const textY = offsetY + height + textMargin + fontSize;
-            const smallDigitY = textY - (fontSize - smallDigitFontSize) / 2;
 
-            // First digit (small, left of start guard)
+            // First digit (left of start guard)
             const firstDigit = document.createElementNS(SVG_NS, 'text');
             firstDigit.setAttribute('x', barcodeStartX - outerDigitGap);
-            firstDigit.setAttribute('y', smallDigitY);
+            firstDigit.setAttribute('y', textY);
             firstDigit.setAttribute('text-anchor', 'end');
             firstDigit.setAttribute('font-family', font);
-            firstDigit.setAttribute('font-size', smallDigitFontSize);
+            firstDigit.setAttribute('font-size', fontSize);
             firstDigit.setAttribute('fill', foreground);
             firstDigit.textContent = fullCode[0];
             svg.appendChild(firstDigit);
@@ -474,14 +471,14 @@
                 svg.appendChild(digit);
             }
 
-            // Last digit (checksum, small, right of end guard)
+            // Last digit (checksum, right of end guard)
             const lastDigit = document.createElementNS(SVG_NS, 'text');
             const endGuardX = barcodeStartX + encoding.length * moduleWidth;
             lastDigit.setAttribute('x', endGuardX + outerDigitGap);
-            lastDigit.setAttribute('y', smallDigitY);
+            lastDigit.setAttribute('y', textY);
             lastDigit.setAttribute('text-anchor', 'start');
             lastDigit.setAttribute('font-family', font);
-            lastDigit.setAttribute('font-size', smallDigitFontSize);
+            lastDigit.setAttribute('font-size', fontSize);
             lastDigit.setAttribute('fill', foreground);
             lastDigit.textContent = fullCode[11];
             svg.appendChild(lastDigit);
