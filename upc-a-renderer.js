@@ -5,7 +5,7 @@
  * with proper GS1-compliant digit placement.
  * Features flat and notched styles, flexible input handling.
  *
- * @version 1.0.0
+ * @version 1.0.1
  * @license MIT
  * @author ZenBlock
  * @copyright (c) 2024 ZenBlock
@@ -392,51 +392,56 @@
         const totalWidth = contentWidth + paddingLeft + paddingRight;
         const totalHeight = contentHeight + paddingTop + paddingBottom;
 
+        // Round all dimensions to prevent sub-pixel rendering artifacts
+        const roundedWidth = Math.round(totalWidth);
+        const roundedHeight = Math.round(totalHeight);
+
         svg.innerHTML = '';
         svg.setAttribute('xmlns', SVG_NS);
-        svg.setAttribute('width', totalWidth);
-        svg.setAttribute('height', totalHeight);
-        svg.setAttribute('viewBox', `0 0 ${totalWidth} ${totalHeight}`);
+        svg.setAttribute('width', roundedWidth);
+        svg.setAttribute('height', roundedHeight);
+        svg.setAttribute('viewBox', `0 0 ${roundedWidth} ${roundedHeight}`);
 
         // Background
         const bgRect = document.createElementNS(SVG_NS, 'rect');
-        bgRect.setAttribute('width', totalWidth);
-        bgRect.setAttribute('height', totalHeight);
+        bgRect.setAttribute('width', roundedWidth);
+        bgRect.setAttribute('height', roundedHeight);
         bgRect.setAttribute('fill', background);
         svg.appendChild(bgRect);
 
         const barcodeStartX = paddingLeft + leftOuterSpace + quietZonePx;
         const offsetY = paddingTop;
 
-        // Bars
-        let x = barcodeStartX;
+        // Bars - use integer positions to prevent sub-pixel rendering artifacts
+        const roundedModuleWidth = Math.round(moduleWidth);
         for (let i = 0; i < encoding.length; i++) {
             const isGuard = (i < 3) || (i >= 45 && i < 50) || (i >= 92);
-            const barHeight = (style === 'notched' && isGuard) ? guardHeight : height;
+            const barHeight = (style === 'notched' && isGuard) ? Math.round(guardHeight) : Math.round(height);
+            const x = Math.round(barcodeStartX + i * moduleWidth);
 
             if (encoding[i] === '1') {
                 const bar = document.createElementNS(SVG_NS, 'rect');
                 bar.setAttribute('x', x);
-                bar.setAttribute('y', offsetY);
-                bar.setAttribute('width', moduleWidth);
+                bar.setAttribute('y', Math.round(offsetY));
+                bar.setAttribute('width', roundedModuleWidth);
                 bar.setAttribute('height', barHeight);
                 bar.setAttribute('fill', foreground);
                 svg.appendChild(bar);
             }
-            x += moduleWidth;
         }
 
-        // Text (only if fontSize > 0) - all digits use same fontSize
+        // Text (only if fontSize > 0) - all digits use same fontSize, round all positions
         if (fontSize > 0) {
-            const textY = offsetY + height + textMargin + fontSize;
+            const textY = Math.round(offsetY + height + textMargin + fontSize);
+            const roundedFontSize = Math.round(fontSize);
 
             // First digit (left of start guard)
             const firstDigit = document.createElementNS(SVG_NS, 'text');
-            firstDigit.setAttribute('x', barcodeStartX - outerDigitGap);
+            firstDigit.setAttribute('x', Math.round(barcodeStartX - outerDigitGap));
             firstDigit.setAttribute('y', textY);
             firstDigit.setAttribute('text-anchor', 'end');
             firstDigit.setAttribute('font-family', font);
-            firstDigit.setAttribute('font-size', fontSize);
+            firstDigit.setAttribute('font-size', roundedFontSize);
             firstDigit.setAttribute('fill', foreground);
             firstDigit.textContent = fullCode[0];
             svg.appendChild(firstDigit);
@@ -444,13 +449,13 @@
             // Left group (5 digits: index 1-5)
             const leftStart = barcodeStartX + 3 * moduleWidth;
             for (let i = 0; i < 5; i++) {
-                const digitX = leftStart + (i + 0.5) * 7 * moduleWidth;
+                const digitX = Math.round(leftStart + (i + 0.5) * 7 * moduleWidth);
                 const digit = document.createElementNS(SVG_NS, 'text');
                 digit.setAttribute('x', digitX);
                 digit.setAttribute('y', textY);
                 digit.setAttribute('text-anchor', 'middle');
                 digit.setAttribute('font-family', font);
-                digit.setAttribute('font-size', fontSize);
+                digit.setAttribute('font-size', roundedFontSize);
                 digit.setAttribute('fill', foreground);
                 digit.textContent = fullCode[i + 1];
                 svg.appendChild(digit);
@@ -459,13 +464,13 @@
             // Right group (5 digits: index 6-10)
             const rightStart = barcodeStartX + 50 * moduleWidth;
             for (let i = 0; i < 5; i++) {
-                const digitX = rightStart + (i + 0.5) * 7 * moduleWidth;
+                const digitX = Math.round(rightStart + (i + 0.5) * 7 * moduleWidth);
                 const digit = document.createElementNS(SVG_NS, 'text');
                 digit.setAttribute('x', digitX);
                 digit.setAttribute('y', textY);
                 digit.setAttribute('text-anchor', 'middle');
                 digit.setAttribute('font-family', font);
-                digit.setAttribute('font-size', fontSize);
+                digit.setAttribute('font-size', roundedFontSize);
                 digit.setAttribute('fill', foreground);
                 digit.textContent = fullCode[i + 6];
                 svg.appendChild(digit);
@@ -473,12 +478,12 @@
 
             // Last digit (checksum, right of end guard)
             const lastDigit = document.createElementNS(SVG_NS, 'text');
-            const endGuardX = barcodeStartX + encoding.length * moduleWidth;
-            lastDigit.setAttribute('x', endGuardX + outerDigitGap);
+            const endGuardX = Math.round(barcodeStartX + encoding.length * moduleWidth);
+            lastDigit.setAttribute('x', Math.round(endGuardX + outerDigitGap));
             lastDigit.setAttribute('y', textY);
             lastDigit.setAttribute('text-anchor', 'start');
             lastDigit.setAttribute('font-family', font);
-            lastDigit.setAttribute('font-size', fontSize);
+            lastDigit.setAttribute('font-size', roundedFontSize);
             lastDigit.setAttribute('fill', foreground);
             lastDigit.textContent = fullCode[11];
             svg.appendChild(lastDigit);
@@ -511,7 +516,7 @@
         calculateChecksum,
         normalizeInput,
         formatUPC,
-        version: '1.0.0',
+        version: '1.0.1',
         DEFAULTS
     };
 
